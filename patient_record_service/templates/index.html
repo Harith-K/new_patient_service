@@ -2,43 +2,126 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 50px;
+            background-color: #f8f9fa;
+        }
+        .navbar-brand img {
+            height: 40px;
+            margin-right: 10px;
+        }
+        .form-control {
+            margin-bottom: 10px;
+        }
+        .table {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Patient Management</h1>
-    <form action="/patients/add" method="post">
-        <h2>Add New Patient</h2>
-        <input type="text" name="first_name" placeholder="First Name" required>
-        <input type="text" name="last_name" placeholder="Last Name" required>
-        <input type="text" name="gender" placeholder="Gender" required>
-        <input type="date" name="date_of_birth" placeholder="DOB" required>
-        <input type="text" name="contact_number" placeholder="Contact" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <textarea name="address" placeholder="Address"></textarea>
-        <button type="submit">Add Patient</button>
-    </form>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="https://via.placeholder.com/40" alt="Logo"> MediTrack
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Patient Screen</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/appointments">Appointments</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-    <h2>Patient List</h2>
-    <table border="1">
-        <tr>
-            <th>Name</th>
-            <th>Contact</th>
-            <th>Email</th>
-            <th>Actions</th>
-        </tr>
-        {% for patient in patients %}
-        <tr>
-            <td>{{ patient.first_name }} {{ patient.last_name }}</td>
-            <td>{{ patient.contact_number }}</td>
-            <td>{{ patient.email }}</td>
-            <td>
-                <a href="/patients/edit/{{ patient.patient_id }}">Edit</a>
-                <form action="/patients/delete/{{ patient.patient_id }}" method="post" style="display:inline;">
-                    <button type="submit">Delete</button>
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="mt-5 text-center">Patient Management</h1>
+        <!-- Add New Patient -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4>Add New Patient</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/patients/add" class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="first_name" placeholder="First Name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="last_name" placeholder="Last Name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" name="gender" required>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="date" class="form-control" name="date_of_birth" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="contact_number" placeholder="Contact Number" required>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="email" class="form-control" name="email" placeholder="Email" required>
+                    </div>
+                    <div class="col-md-6">
+                        <textarea class="form-control" name="address" placeholder="Address" rows="2"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Add Patient</button>
+                    </div>
                 </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+            </div>
+        </div>
+
+        <!-- Patient List -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4>Patient List</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in patients %}
+                        <tr>
+                            <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+                            <td>{{ patient.contact_number }}</td>
+                            <td>{{ patient.email }}</td>
+                            <td>
+                                <a href="/patients/edit/{{ patient.patient_id }}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="/patients/delete/{{ patient.patient_id }}" class="btn btn-danger btn-sm">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

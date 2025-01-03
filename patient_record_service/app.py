@@ -76,7 +76,7 @@ class PatientOut(PatientCreate):
 
 # SQLAlchemy models
 class Patient(Base):
-    __tablename__ = "healthsyc_patients"
+    __tablename__ = "patients"
     patient_id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(255), index=True)
     last_name = Column(String(255))
@@ -84,12 +84,13 @@ class Patient(Base):
     date_of_birth = Column(Date)
     contact_number = Column(String(255))
     email = Column(String(255))
-    address = Column(Text)
-    medical_history = Column(JSON)
-    prescriptions = Column(JSON)
-    lab_results = Column(JSON)
+    address = Column(String(255))  # Updated to String(255)
+    medical_history = Column(String(255), default="")  # Updated to String(255)
+    prescriptions = Column(String(255), default="")  # Updated to String(255)
+    lab_results = Column(String(255), default="")  # Updated to String(255)
     created_at = Column(TIMESTAMP, default=datetime.datetime.utcnow)
     updated_at = Column(TIMESTAMP, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
 
 
 # Create tables
@@ -115,20 +116,30 @@ def add_patient(
     contact_number: str = Form(...),
     email: str = Form(...),
     address: str = Form(...),
+    medical_history: str = Form(""),  # Default to empty string
+    prescriptions: str = Form(""),  # Default to empty string
+    lab_results: str = Form(""),  # Default to empty string
     db: Session = Depends(get_db),
 ):
-    new_patient = Patient(
-        first_name=first_name,
-        last_name=last_name,
-        gender=gender,
-        date_of_birth=date_of_birth,
-        contact_number=contact_number,
-        email=email,
-        address=address,
-    )
-    db.add(new_patient)
-    db.commit()
-    return RedirectResponse("/patients", status_code=302)
+    try:
+        new_patient = Patient(
+            first_name=first_name,
+            last_name=last_name,
+            gender=gender,
+            date_of_birth=datetime.datetime.strptime(date_of_birth, "%Y-%m-%d").date(),
+            contact_number=contact_number,
+            email=email,
+            address=address,
+            medical_history=medical_history,
+            prescriptions=prescriptions,
+            lab_results=lab_results,
+        )
+        db.add(new_patient)
+        db.commit()
+        return RedirectResponse("/patients", status_code=302)
+    except Exception as e:
+        logging.error(f"Error inserting patient: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 # Route: Display all patients
@@ -148,20 +159,36 @@ def update_patient(
     contact_number: str = Form(...),
     email: str = Form(...),
     address: str = Form(...),
+    medical_history: str = Form(""),  # Default to empty string
+    prescriptions: str = Form(""),  # Default to empty string
+    lab_results: str = Form(""),  # Default to empty string
     db: Session = Depends(get_db),
 ):
-    patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    patient.first_name = first_name
-    patient.last_name = last_name
-    patient.gender = gender
-    patient.date_of_birth = date_of_birth
-    patient.contact_number = contact_number
-    patient.email = email
-    patient.address = address
-    db.commit()
-    return RedirectResponse("/patients", status_code=302)
+    try:
+        # Fetch the patient record
+        patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+
+        # Update patient fields
+        patient.first_name = first_name
+        patient.last_name = last_name
+        patient.gender = gender
+        patient.date_of_birth = datetime.datetime.strptime(date_of_birth, "%Y-%m-%d").date()
+        patient.contact_number = contact_number
+        patient.email = email
+        patient.address = address
+        patient.medical_history = medical_history
+        patient.prescriptions = prescriptions
+        patient.lab_results = lab_results
+
+        # Commit changes to the database
+        db.commit()
+        return RedirectResponse("/patients", status_code=302)
+    except Exception as e:
+        logging.error(f"Error updating patient: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
 
 # Route: Delete a patient
 @app.post("/patients/delete/{patient_id}", response_class=HTMLResponse)
