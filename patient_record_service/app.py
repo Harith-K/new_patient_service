@@ -150,8 +150,8 @@ def read_patients(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("index.html", {"request": request, "patients": patients})
 
 # Route: Update a patient
-@app.post("/patients/update/{patient_id}", response_class=HTMLResponse)
-def update_patient(
+@app.post("/patients/edit/{patient_id}", response_class=HTMLResponse)
+def edit_patient(
     patient_id: int,
     first_name: str = Form(...),
     last_name: str = Form(...),
@@ -160,18 +160,19 @@ def update_patient(
     contact_number: str = Form(...),
     email: str = Form(...),
     address: str = Form(...),
-    medical_history: str = Form(""),  # Default to empty string
-    prescriptions: str = Form(""),  # Default to empty string
-    lab_results: str = Form(""),  # Default to empty string
+    medical_history: str = Form(""),
+    prescriptions: str = Form(""),
+    lab_results: str = Form(""),
     db: Session = Depends(get_db),
 ):
     try:
-        # Fetch the patient record
+        logging.info(f"Editing patient with ID: {patient_id}")
         patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
         if not patient:
+            logging.error(f"Patient with ID {patient_id} not found.")
             raise HTTPException(status_code=404, detail="Patient not found")
 
-        # Update patient fields
+        # Update patient details
         patient.first_name = first_name
         patient.last_name = last_name
         patient.gender = gender
@@ -183,11 +184,11 @@ def update_patient(
         patient.prescriptions = prescriptions
         patient.lab_results = lab_results
 
-        # Commit changes to the database
         db.commit()
-        return RedirectResponse("/patients", status_code=302)
+        logging.info(f"Patient with ID {patient_id} updated successfully.")
+        return RedirectResponse(url="/patients", status_code=302)
     except Exception as e:
-        logging.error(f"Error updating patient: {e}")
+        logging.error(f"Error editing patient with ID {patient_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
