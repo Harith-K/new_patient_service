@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 import logging
 from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Configure Jinja2 templates directory
