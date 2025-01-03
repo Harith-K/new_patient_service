@@ -15,5 +15,6 @@ spec:
       containers:
         - name: appointment-scheduling-service
           image: harithchin1673/appointment-scheduling-service:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 5001
