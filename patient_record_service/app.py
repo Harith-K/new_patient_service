@@ -67,7 +67,7 @@ class PatientOut(PatientCreate):
 
 # SQLAlchemy models
 class Patient(Base):
-    __tablename__ = "patients"
+    __tablename__ = "healthsyc_patients"
     patient_id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(255), index=True)
     last_name = Column(String(255))
@@ -82,10 +82,6 @@ class Patient(Base):
     created_at = Column(TIMESTAMP, default=datetime.datetime.utcnow)
     updated_at = Column(TIMESTAMP, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-  #######NEED TO WORK ON THE RELATIONSHIP########  
-  # Define the reverse relationship for appointments
-  #  appointments = relationship("appointment_scheduling_service.Appointment", back_populates="patient")  
-
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -98,7 +94,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 
 # API Endpoints
