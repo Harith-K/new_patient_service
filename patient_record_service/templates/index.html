@@ -57,40 +57,94 @@
             <div class="card-body">
                 <form method="post" action="/patients/add" class="row g-3">
                     <!-- Hidden input for patient_id -->
-                    <input type="hidden" name="patient_id" value="">
+                    <input type="hidden" name="patient_id" value="{{ patient_data.patient_id if patient_data else '' }}">
                     <div class="col-md-6">
-                        <input type="text" class="form-control" name="first_name" placeholder="First Name" required>
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="first_name"
+                            placeholder="First Name"
+                            value="{{ patient_data.first_name if patient_data else '' }}"
+                            required
+                        />
                     </div>
                     <div class="col-md-6">
-                        <input type="text" class="form-control" name="last_name" placeholder="Last Name" required>
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="last_name"
+                            placeholder="Last Name"
+                            value="{{ patient_data.last_name if patient_data else '' }}"
+                            required
+                        />
                     </div>
                     <div class="col-md-4">
                         <select class="form-select" name="gender" required>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
+                            <option value="Male" {% if patient_data and patient_data.gender == "Male" %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if patient_data and patient_data.gender == "Female" %}selected{% endif %}>Female</option>
+                            <option value="Other" {% if patient_data and patient_data.gender == "Other" %}selected{% endif %}>Other</option>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <input type="date" class="form-control" name="date_of_birth" required>
+                        <input
+                            type="date"
+                            class="form-control"
+                            name="date_of_birth"
+                            value="{{ patient_data.date_of_birth if patient_data else '' }}"
+                            required
+                        />
                     </div>
                     <div class="col-md-4">
-                        <input type="text" class="form-control" name="contact_number" placeholder="Contact Number" required>
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="contact_number"
+                            placeholder="Contact Number"
+                            value="{{ patient_data.contact_number if patient_data else '' }}"
+                            required
+                        />
                     </div>
                     <div class="col-md-6">
-                        <input type="email" class="form-control" name="email" placeholder="Email" required>
+                        <input
+                            type="email"
+                            class="form-control"
+                            name="email"
+                            placeholder="Email"
+                            value="{{ patient_data.email if patient_data else '' }}"
+                            required
+                        />
                     </div>
                     <div class="col-md-6">
-                        <textarea class="form-control" name="address" placeholder="Address" rows="2"></textarea>
+                        <textarea
+                            class="form-control"
+                            name="address"
+                            placeholder="Address"
+                            rows="2"
+                        >{{ patient_data.address if patient_data else '' }}</textarea>
                     </div>
                     <div class="col-md-6">
-                        <textarea class="form-control" name="medical_history" placeholder="Medical History (Optional)" rows="2"></textarea>
+                        <textarea
+                            class="form-control"
+                            name="medical_history"
+                            placeholder="Medical History (Optional)"
+                            rows="2"
+                        >{{ patient_data.medical_history if patient_data else '' }}</textarea>
                     </div>
                     <div class="col-md-6">
-                        <textarea class="form-control" name="prescriptions" placeholder="Prescriptions (Optional)" rows="2"></textarea>
+                        <textarea
+                            class="form-control"
+                            name="prescriptions"
+                            placeholder="Prescriptions (Optional)"
+                            rows="2"
+                        >{{ patient_data.prescriptions if patient_data else '' }}</textarea>
                     </div>
                     <div class="col-md-6">
-                        <textarea class="form-control" name="lab_results" placeholder="Lab Results (Optional)" rows="2"></textarea>
+                        <textarea
+                            class="form-control"
+                            name="lab_results"
+                            placeholder="Lab Results (Optional)"
+                            rows="2"
+                        >{{ patient_data.lab_results if patient_data else '' }}</textarea>
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">Submit</button>
@@ -122,20 +176,7 @@
                             <td>{{ patient.email }}</td>
                             <td>
                                 <!-- Edit Action -->
-                                <form method="post" action="/patients/add" style="display:inline;">
-                                    <input type="hidden" name="patient_id" value="{{ patient.patient_id }}">
-                                    <input type="hidden" name="first_name" value="{{ patient.first_name }}">
-                                    <input type="hidden" name="last_name" value="{{ patient.last_name }}">
-                                    <input type="hidden" name="gender" value="{{ patient.gender }}">
-                                    <input type="hidden" name="date_of_birth" value="{{ patient.date_of_birth }}">
-                                    <input type="hidden" name="contact_number" value="{{ patient.contact_number }}">
-                                    <input type="hidden" name="email" value="{{ patient.email }}">
-                                    <input type="hidden" name="address" value="{{ patient.address }}">
-                                    <input type="hidden" name="medical_history" value="{{ patient.medical_history }}">
-                                    <input type="hidden" name="prescriptions" value="{{ patient.prescriptions }}">
-                                    <input type="hidden" name="lab_results" value="{{ patient.lab_results }}">
-                                    <button type="submit" class="btn btn-warning btn-sm">Edit</button>
-                                </form>
+                                <a href="/patients/add?patient_id={{ patient.patient_id }}" class="btn btn-warning btn-sm">Edit</a>
                                 <!-- Delete Action -->
                                 <form method="post" action="/patients/delete/{{ patient.patient_id }}" style="display:inline;">
                                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>

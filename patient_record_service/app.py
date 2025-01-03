@@ -174,47 +174,31 @@ def read_patients(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("index.html", {"request": request, "patients": patients})
 
 # Route: Update a patient
-@app.post("/patients/edit/{patient_id}", response_class=HTMLResponse)
-def edit_patient(
-    patient_id: int,
-    first_name: str = Form(...),
-    last_name: str = Form(...),
-    gender: str = Form(...),
-    date_of_birth: str = Form(...),
-    contact_number: str = Form(...),
-    email: str = Form(...),
-    address: str = Form(...),
-    medical_history: str = Form(""),
-    prescriptions: str = Form(""),
-    lab_results: str = Form(""),
-    db: Session = Depends(get_db),
-):
-    try:
-        logging.info(f"Editing patient with ID: {patient_id}")
+@app.get("/patients/add", response_class=HTMLResponse)
+def get_patient_to_edit(patient_id: Optional[int] = None, db: Session = Depends(get_db)):
+    """
+    Handles pre-filling the form for editing a patient.
+    """
+    patient_data = {}
+    if patient_id:
         patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
         if not patient:
-            logging.error(f"Patient with ID {patient_id} not found.")
             raise HTTPException(status_code=404, detail="Patient not found")
+        patient_data = {
+            "patient_id": patient.patient_id,
+            "first_name": patient.first_name,
+            "last_name": patient.last_name,
+            "gender": patient.gender,
+            "date_of_birth": patient.date_of_birth.isoformat(),
+            "contact_number": patient.contact_number,
+            "email": patient.email,
+            "address": patient.address,
+            "medical_history": patient.medical_history,
+            "prescriptions": patient.prescriptions,
+            "lab_results": patient.lab_results,
+        }
 
-        # Update patient details
-        patient.first_name = first_name
-        patient.last_name = last_name
-        patient.gender = gender
-        patient.date_of_birth = datetime.datetime.strptime(date_of_birth, "%Y-%m-%d").date()
-        patient.contact_number = contact_number
-        patient.email = email
-        patient.address = address
-        patient.medical_history = medical_history
-        patient.prescriptions = prescriptions
-        patient.lab_results = lab_results
-
-        db.commit()
-        logging.info(f"Patient with ID {patient_id} updated successfully.")
-        return RedirectResponse(url="/patients", status_code=302)
-    except Exception as e:
-        logging.error(f"Error editing patient with ID {patient_id}: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
+    return templates.TemplateResponse("index.html", {"request": {}, "patient_data": patient_data, "patients": db.query(Patient).all()})
 
 # Route: Delete a patient
 @app.post("/patients/delete/{patient_id}", response_class=HTMLResponse)
