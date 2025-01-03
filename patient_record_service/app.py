@@ -8,6 +8,11 @@ import datetime
 import os
 from dotenv import load_dotenv
 import logging
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+# Configure Jinja2 templates directory
+templates = Jinja2Templates(directory="templates")  
 
 
 logging.basicConfig()
@@ -101,24 +106,77 @@ def get_db():
 
 
 # API Endpoints
-@app.post("/patients/", response_model=PatientOut)
-def create_patient(patient: PatientCreate, db: Session = Depends(get_db)):
-    db_patient = Patient(**patient.dict())
-    db.add(db_patient)
+@app.post("/patients/add", response_class=HTMLResponse)
+def add_patient(
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    gender: str = Form(...),
+    date_of_birth: str = Form(...),
+    contact_number: str = Form(...),
+    email: str = Form(...),
+    address: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    new_patient = Patient(
+        first_name=first_name,
+        last_name=last_name,
+        gender=gender,
+        date_of_birth=date_of_birth,
+        contact_number=contact_number,
+        email=email,
+        address=address,
+    )
+    db.add(new_patient)
     db.commit()
-    db.refresh(db_patient)
-    return db_patient
+    return RedirectResponse("/patients", status_code=302)
 
-# Route to get all patients
-@app.get("/patients/", response_model=list[PatientOut])
-def get_all_patients(db: Session = Depends(get_db)):
+
+# Route: Display all patients
+@app.get("/patients", response_class=HTMLResponse)
+def read_patients(request: Request, db: Session = Depends(get_db)):
     patients = db.query(Patient).all()
-    return patients
+    return templates.TemplateResponse("index.html", {"request": request, "patients": patients})
 
-# Route to get a specific patient by ID
-@app.get("/patients/{patient_id}", response_model=PatientOut)
-def get_patient(patient_id: int, db: Session = Depends(get_db)):
-    db_patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
-    if db_patient is None:
+# Route: Update a patient
+@app.post("/patients/update/{patient_id}", response_class=HTMLResponse)
+def update_patient(
+    patient_id: int,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    gender: str = Form(...),
+    date_of_birth: str = Form(...),
+    contact_number: str = Form(...),
+    email: str = Form(...),
+    address: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
+    if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return db_patient
+    patient.first_name = first_name
+    patient.last_name = last_name
+    patient.gender = gender
+    patient.date_of_birth = date_of_birth
+    patient.contact_number = contact_number
+    patient.email = email
+    patient.address = address
+    db.commit()
+    return RedirectResponse("/patients", status_code=302)
+
+# Route: Delete a patient
+@app.post("/patients/delete/{patient_id}", response_class=HTMLResponse)
+def delete_patient(patient_id: int, db: Session = Depends(get_db)):
+    patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    db.delete(patient)
+    db.commit()
+    return RedirectResponse("/patients", status_code=302)
+
+# # Route to get a specific patient by ID
+# @app.get("/patients/{patient_id}", response_model=PatientOut)
+# def get_patient(patient_id: int, db: Session = Depends(get_db)):
+#     db_patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
+#     if db_patient is None:
+#         raise HTTPException(status_code=404, detail="Patient not found")
+#     return db_patient

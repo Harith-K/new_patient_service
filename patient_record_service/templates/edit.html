@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Patient</title>
+</head>
+<body>
+    <h1>Edit Patient</h1>
+    <form action="/patients/update/{{ patient.patient_id }}" method="post">
+        <input type="text" name="first_name" value="{{ patient.first_name }}" required>
+        <input type="text" name="last_name" value="{{ patient.last_name }}" required>
+        <input type="text" name="gender" value="{{ patient.gender }}" required>
+        <input type="date" name="date_of_birth" value="{{ patient.date_of_birth }}" required>
+        <input type="text" name="contact_number" value="{{ patient.contact_number }}" required>
+        <input type="email" name="email" value="{{ patient.email }}" required>
+        <textarea name="address">{{ patient.address }}</textarea>
+        <button type="submit">Update Patient</button>
+    </form>
+</body>
+</html>
+
