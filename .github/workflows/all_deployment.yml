@@ -127,7 +127,7 @@ jobs:
         run: |
           # Wait for the services to be fully deployed
           echo "Waiting for services to be ready..."
-          sleep 180  # Wait for 3 minute to give the LoadBalancer time to provision the external IPs
+          sleep 60  # Wait for 3 minute to give the LoadBalancer time to provision the external IPs
       
           # Get the external IP for patient-record-service and appointment-scheduling-service
           PATIENT_SERVICE_IP=$(kubectl get svc patient-record-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
