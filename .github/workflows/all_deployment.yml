@@ -39,7 +39,7 @@ jobs:
       # Step 6: Build Docker image for appointment_scheduling_service
       - name: Build appointment_scheduling_service Docker image
         run: |
-          docker build -t harithchin1673/appointment-scheduling-service -f appointment_scheduling_service/Dockerfile .
+          docker build -t harithchin1673/appointment-scheduling-service:v1 -f appointment_scheduling_service/Dockerfile .
 
       # Step 7: Push appointment_scheduling_service Docker image to Docker Hub
       - name: Push appointment_scheduling_service Docker image to Docker Hub
