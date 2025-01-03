@@ -123,10 +123,3 @@ def get_patient(patient_id: int, db: Session = Depends(get_db)):
     if db_patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
     return db_patient
-
-@app.get("/patients/test/{patient_id}", response_model=PatientOut)
-def get_patient(patient_id: int, db: Session = Depends(get_db)):
-    db_patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
-    if db_patient is None:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    return db_patient
