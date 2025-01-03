@@ -135,7 +135,7 @@ jobs:
       
           # Run the integration tests using the external IPs and respective ports
           echo "Running integration tests for Patient Record Service..."
-          curl -f "http://$PATIENT_SERVICE_IP:80/patients/1" || exit 1
+          curl -f "http://$PATIENT_SERVICE_IP:50/patients/1" || exit 1
       
           echo "Running integration tests for Appointment Scheduling Service..."
-          curl -f "http://$APPOINTMENT_SERVICE_IP:81/appointments/1" || exit 1
+          curl -f "http://$APPOINTMENT_SERVICE_IP:51/appointments/1" || exit 1
