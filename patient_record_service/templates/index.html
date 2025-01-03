@@ -9,7 +9,7 @@
     <style>
         body {
             padding-top: 50px;
-            background-color: #e3e644;
+            background-color: #a6d5e7;
         }
         .navbar-brand img {
             height: 40px;
@@ -126,7 +126,7 @@
                         <textarea
                             class="form-control"
                             name="medical_history"
-                            placeholder="Medical History (Optional)"
+                            placeholder="Medical history of patient"
                             rows="2"
                         >{{ patient_data.medical_history if patient_data else '' }}</textarea>
                     </div>
@@ -134,7 +134,7 @@
                         <textarea
                             class="form-control"
                             name="prescriptions"
-                            placeholder="Prescriptions (Optional)"
+                            placeholder="Prescriptions issued"
                             rows="2"
                         >{{ patient_data.prescriptions if patient_data else '' }}</textarea>
                     </div>
@@ -142,7 +142,7 @@
                         <textarea
                             class="form-control"
                             name="lab_results"
-                            placeholder="Lab Results (Optional)"
+                            placeholder="Results issued"
                             rows="2"
                         >{{ patient_data.lab_results if patient_data else '' }}</textarea>
                     </div>
