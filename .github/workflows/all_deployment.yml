@@ -44,7 +44,7 @@ jobs:
       # Step 7: Push appointment_scheduling_service Docker image to Docker Hub
       - name: Push appointment_scheduling_service Docker image to Docker Hub
         run: |
-          docker push harithchin1673/appointment-scheduling-service:v1
+          docker push harithchin1673/appointment-scheduling-service:v1 || sleep 30 && docker push harithchin1673/appointment-scheduling-service:v1
 
       # Step 8: Set up AWS CLI and configure credentials
       - name: Set up AWS CLI
