@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointment-scheduling-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: appointment-scheduling-service
+  template:
+    metadata:
+      labels:
+        app: appointment-scheduling-service
+    spec:
+      containers:
+        - name: appointment-scheduling-service
+          image: harithchin1673/appointment-scheduling-service:v1
+          ports:
+            - containerPort: 5001

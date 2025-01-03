@@ -1,0 +1,141 @@
+name: CI/CD Pipeline for MediTrack
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to main branch
+  workflow_dispatch:  # Allow manual triggering from GitHub UI
+  
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout code from GitHub repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Docker Buildx for multi-platform builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Step 3: Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Step 4: Build Docker image for patient_record_service
+      - name: Build patient_record_service Docker image
+        run: |
+          cd patient_record_service
+          docker build -t harithchin1673/patient-service:v1 .
+
+      # Step 5: Push patient_record_service Docker image to Docker Hub
+      - name: Push patient_record_service Docker image to Docker Hub
+        run: |
+          docker push harithchin1673/patient-service:v1
+
+      # Step 6: Build Docker image for appointment_scheduling_service
+      - name: Build appointment_scheduling_service Docker image
+        run: |
+          docker build -t harithchin1673/appointment-scheduling-service -f appointment_scheduling_service/Dockerfile .
+
+      # Step 7: Push appointment_scheduling_service Docker image to Docker Hub
+      - name: Push appointment_scheduling_service Docker image to Docker Hub
+        run: |
+          docker push harithchin1673/appointment-scheduling-service:v1
+
+      # Step 8: Set up AWS CLI and configure credentials
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Step 9: Install eksctl
+      - name: Install eksctl
+        run: |
+              ARCH=amd64
+              PLATFORM=$(uname -s)_$ARCH
+              curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+              tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
+              sudo mv /tmp/eksctl /usr/local/bin
+
+      # Step 10: Create or Update EKS Cluster using eksctl (if not already created)
+      - name: Create EKS Cluster with eksctl
+        run: |
+            if ! aws eks --region ${{ secrets.AWS_REGION }} describe-cluster --name patient-record-cluster; then
+            echo "Cluster does not exist. Creating EKS cluster..."
+            eksctl create cluster \
+              --name patient-record-cluster \
+              --region ${{ secrets.AWS_REGION }} \
+              --nodegroup-name standard-workers \
+              --node-type t2.small \  # Updated instance type
+              --nodes 2 \
+              --nodes-min 1 \
+              --nodes-max 3 \
+              --managed
+            else
+            echo "Cluster already exists. Skipping creation."
+            fi 
+
+      # Step 11: Update kubeconfig to access the EKS cluster
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name patient-record-cluster
+
+      # Step 12: Deploy to EKS using kubectl (Deployment part)
+      - name: Deploy patient_record_service and appointment_scheduling_service to EKS
+        run: |
+          # Deploy patient_record_service using kubectl
+          kubectl apply -f patient_record_service/deployment.yaml
+          kubectl apply -f patient_record_service/service.yaml
+
+          # Deploy appointment_scheduling_service using kubectl
+          kubectl apply -f appointment_scheduling_service/deployment.yaml
+          kubectl apply -f appointment_scheduling_service/service.yaml
+
+      # Step 13: Deploy to EKS using Blue-Green Deployment for both services
+      - name: Deploy to EKS using Blue-Green Deployment
+        run: |
+          # Deploy patient_record_service to Green environment
+          kubectl set image deployment/patient-record-service patient-record-service=harithchin1673/patient-service:v1 --record
+          kubectl rollout status deployment/patient-record-service
+
+          # Deploy appointment_scheduling_service to Green environment
+          kubectl set image deployment/appointment-scheduling-service appointment-scheduling-service=harithchin1673/appointment-scheduling-service:v1 --record
+          kubectl rollout status deployment/appointment-scheduling-service
+
+          # Switch traffic to Green (make Green live)
+          kubectl set env deployment/patient-record-service ENV=Green
+          kubectl set env deployment/appointment-scheduling-service ENV=Green
+
+       # Step 14: Check the deployment status
+      - name: Verify Deployment
+        run: |
+          kubectl get pods
+          kubectl get svc
+
+      # Step 15: Run automated integration tests after deployment
+      - name: Run integration tests
+        run: |
+          # Wait for the services to be fully deployed
+          echo "Waiting for services to be ready..."
+          sleep 60  # Wait for 1 minute to give the LoadBalancer time to provision the external IPs
+      
+          # Get the external IP for patient-record-service and appointment-scheduling-service
+          PATIENT_SERVICE_IP=$(kubectl get svc patient-record-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          APPOINTMENT_SERVICE_IP=$(kubectl get svc appointment-scheduling-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+      
+          # Print the IPs to debug
+          echo "Patient Record Service IP: $PATIENT_SERVICE_IP"
+          echo "Appointment Scheduling Service IP: $APPOINTMENT_SERVICE_IP"
+      
+          # Run the integration tests using the external IPs and respective ports
+          echo "Running integration tests for Patient Record Service..."
+          curl -f "http://$PATIENT_SERVICE_IP:80/patients/1" || exit 1
+      
+          echo "Running integration tests for Appointment Scheduling Service..."
+          curl -f "http://$APPOINTMENT_SERVICE_IP:81/appointments/1" || exit 1
