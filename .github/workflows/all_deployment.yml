@@ -119,25 +119,25 @@ jobs:
       
 
       # Step 13: Deploy to EKS using Blue-Green Deployment for both services
-      # - name: Deploy to EKS using Blue-Green Deployment
-      #   run: |
-      #     # Deploy patient_record_service to Green environment
-      #     kubectl set image deployment/patient-record-service patient-record-service=harithchin1673/patient-service:v1 --record
-      #     kubectl rollout status deployment/patient-record-service
+      - name: Deploy to EKS using Blue-Green Deployment
+        run: |
+          # Deploy patient_record_service to Green environment
+          kubectl set image deployment/patient-record-service patient-record-service=harithchin1673/patient-service:v1 --record
+          kubectl rollout status deployment/patient-record-service
 
-      #     # Deploy appointment_scheduling_service to Green environment
-      #     kubectl set image deployment/appointment-scheduling-service appointment-scheduling-service=harithchin1673/appointment-scheduling-service:v1 --record
-      #     kubectl rollout status deployment/appointment-scheduling-service
+          # Deploy appointment_scheduling_service to Green environment
+          kubectl set image deployment/appointment-scheduling-service appointment-scheduling-service=harithchin1673/appointment-scheduling-service:v1 --record
+          kubectl rollout status deployment/appointment-scheduling-service
 
-      #     # Switch traffic to Green (make Green live)
-      #     kubectl set env deployment/patient-record-service ENV=Green
-      #     kubectl set env deployment/appointment-scheduling-service ENV=Green
+          # Switch traffic to Green (make Green live)
+          kubectl set env deployment/patient-record-service ENV=Green
+          kubectl set env deployment/appointment-scheduling-service ENV=Green
 
        # Step 14: Check the deployment status
       - name: Verify Deployment
         run: |
 
-          sleep 180
+          sleep 60
           kubectl get pods
           kubectl get svc
 
@@ -150,7 +150,7 @@ jobs:
         run: |
           # Wait for the services to be fully deployed
           echo "Waiting for services to be ready..."
-          sleep 180  # Wait for 3 minute to give the LoadBalancer time to provision the external IPs
+          sleep 60  # Wait for 3 minute to give the LoadBalancer time to provision the external IPs
 
           # Get the external IP for patient-record-service and appointment-scheduling-service
           PATIENT_SERVICE_IP=$(kubectl get svc patient-record-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
@@ -162,7 +162,7 @@ jobs:
       
           # Run the integration tests using the external IPs and respective ports
           # echo "Running integration tests for Patient Record Service..."
-          # curl -f "http://$PATIENT_SERVICE_IP:50/patients/test/1" || exit 1
+          # curl -f "http://$PATIENT_SERVICE_IP:50/patients/1" || exit 1
       
           # echo "Running integration tests for Appointment Scheduling Service..."
           # curl -f "http://$APPOINTMENT_SERVICE_IP:51/appointments/1" || exit 1
