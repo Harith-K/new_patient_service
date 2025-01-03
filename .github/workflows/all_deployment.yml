@@ -29,7 +29,13 @@ jobs:
       - name: Build patient_record_service Docker image
         run: |
           cd patient_record_service
-          docker build -t harithchin1673/patient-service:v1 .
+          docker build --no-cache -t harithchin1673/patient-service:v1 .
+
+      # - name: Run patient_record_service Docker container
+      #   run: |
+      #     docker run -d -p 8000:8000 --name patient-service harithchin1673/patient-service:v1
+      #     sleep 10  # Allow some time for the service to start
+      #     docker logs patient-service
 
       # Step 5: Push patient_record_service Docker image to Docker Hub
       - name: Push patient_record_service Docker image to Docker Hub
@@ -39,7 +45,7 @@ jobs:
       # Step 6: Build Docker image for appointment_scheduling_service
       - name: Build appointment_scheduling_service Docker image
         run: |
-          docker build -t harithchin1673/appointment-scheduling-service:v1 -f appointment_scheduling_service/Dockerfile .
+          docker build --no-cache -t harithchin1673/appointment-scheduling-service:v1 -f appointment_scheduling_service/Dockerfile .
 
       # Step 7: Push appointment_scheduling_service Docker image to Docker Hub
       - name: Push appointment_scheduling_service Docker image to Docker Hub
@@ -96,6 +102,21 @@ jobs:
           # Deploy appointment_scheduling_service using kubectl
           kubectl apply -f appointment_scheduling_service/deployment.yaml
           kubectl apply -f appointment_scheduling_service/service.yaml
+
+
+      # Step 13: Rollout Restart for Both Services
+      - name: Rollout Restart for Both Services
+        run: |
+          echo "Restarting patient_record_service deployment..."
+          kubectl rollout restart deployment patient-record-service
+
+          echo "Restarting appointment_scheduling_service deployment..."
+          kubectl rollout restart deployment appointment-scheduling-service
+
+          echo "Waiting for rollouts to complete..."
+          kubectl rollout status deployment patient-record-service
+          kubectl rollout status deployment appointment-scheduling-service
+      
 
       # Step 13: Deploy to EKS using Blue-Green Deployment for both services
       # - name: Deploy to EKS using Blue-Green Deployment

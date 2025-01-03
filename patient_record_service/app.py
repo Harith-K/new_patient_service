@@ -7,7 +7,11 @@ from sqlalchemy.ext.declarative import declarative_base
 import datetime
 import os
 from dotenv import load_dotenv
+import logging
 
+
+logging.basicConfig()
+logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 app = FastAPI()
 
