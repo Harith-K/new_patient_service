@@ -110,7 +110,21 @@ def create_patient(patient: PatientCreate, db: Session = Depends(get_db)):
     db.refresh(db_patient)
     return db_patient
 
-@app.get("/patients/vivatest/{patient_id}", response_model=PatientOut)
+# Route to get all patients
+@app.get("/patients/", response_model=list[PatientOut])
+def get_all_patients(db: Session = Depends(get_db)):
+    patients = db.query(Patient).all()
+    return patients
+
+# Route to get a specific patient by ID
+@app.get("/patients/{patient_id}", response_model=PatientOut)
+def get_patient(patient_id: int, db: Session = Depends(get_db)):
+    db_patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
+    if db_patient is None:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return db_patient
+
+@app.get("/patients/test/{patient_id}", response_model=PatientOut)
 def get_patient(patient_id: int, db: Session = Depends(get_db)):
     db_patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
     if db_patient is None:
