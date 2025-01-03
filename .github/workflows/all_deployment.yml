@@ -115,23 +115,21 @@ jobs:
        # Step 14: Check the deployment status
       - name: Verify Deployment
         run: |
+
+          sleep 180
           kubectl get pods
           kubectl get svc
 
-        # Print the IPs to debug
-          echo "Patient Record Service IP: $PATIENT_SERVICE_IP"
-          echo "Appointment Scheduling Service IP: $APPOINTMENT_SERVICE_IP"
+          # Get the external IP for patient-record-service and appointment-scheduling-service
+          PATIENT_SERVICE_IP=$(kubectl get svc patient-record-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          APPOINTMENT_SERVICE_IP=$(kubectl get svc appointment-scheduling-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 
       # Step 15: Run automated integration tests after deployment
       - name: Run integration tests
         run: |
           # Wait for the services to be fully deployed
           echo "Waiting for services to be ready..."
-          sleep 60  # Wait for 3 minute to give the LoadBalancer time to provision the external IPs
-      
-          # Get the external IP for patient-record-service and appointment-scheduling-service
-          PATIENT_SERVICE_IP=$(kubectl get svc patient-record-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          APPOINTMENT_SERVICE_IP=$(kubectl get svc appointment-scheduling-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          sleep 180  # Wait for 3 minute to give the LoadBalancer time to provision the external IPs
 
           # Print the IPs to debug
           echo "Patient Record Service IP: $PATIENT_SERVICE_IP"
