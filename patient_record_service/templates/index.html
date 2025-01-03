@@ -49,13 +49,15 @@
     <!-- Main Content -->
     <div class="container">
         <h1 class="mt-5 text-center">Patient Management</h1>
-        <!-- Add New Patient -->
+        <!-- Add/Edit Patient -->
         <div class="card mt-4">
             <div class="card-header">
-                <h4>Add New Patient</h4>
+                <h4>Add/Edit Patient</h4>
             </div>
             <div class="card-body">
                 <form method="post" action="/patients/add" class="row g-3">
+                    <!-- Hidden input for patient_id -->
+                    <input type="hidden" name="patient_id" value="">
                     <div class="col-md-6">
                         <input type="text" class="form-control" name="first_name" placeholder="First Name" required>
                     </div>
@@ -91,7 +93,7 @@
                         <textarea class="form-control" name="lab_results" placeholder="Lab Results (Optional)" rows="2"></textarea>
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary">Add Patient</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
                     </div>
                 </form>
             </div>
@@ -119,8 +121,25 @@
                             <td>{{ patient.contact_number }}</td>
                             <td>{{ patient.email }}</td>
                             <td>
-                                <a href="/patients/edit/{{ patient.patient_id }}" class="btn btn-warning btn-sm">Edit</a>
-                                <a href="/patients/delete/{{ patient.patient_id }}" class="btn btn-danger btn-sm">Delete</a>
+                                <!-- Edit Action -->
+                                <form method="post" action="/patients/add" style="display:inline;">
+                                    <input type="hidden" name="patient_id" value="{{ patient.patient_id }}">
+                                    <input type="hidden" name="first_name" value="{{ patient.first_name }}">
+                                    <input type="hidden" name="last_name" value="{{ patient.last_name }}">
+                                    <input type="hidden" name="gender" value="{{ patient.gender }}">
+                                    <input type="hidden" name="date_of_birth" value="{{ patient.date_of_birth }}">
+                                    <input type="hidden" name="contact_number" value="{{ patient.contact_number }}">
+                                    <input type="hidden" name="email" value="{{ patient.email }}">
+                                    <input type="hidden" name="address" value="{{ patient.address }}">
+                                    <input type="hidden" name="medical_history" value="{{ patient.medical_history }}">
+                                    <input type="hidden" name="prescriptions" value="{{ patient.prescriptions }}">
+                                    <input type="hidden" name="lab_results" value="{{ patient.lab_results }}">
+                                    <button type="submit" class="btn btn-warning btn-sm">Edit</button>
+                                </form>
+                                <!-- Delete Action -->
+                                <form method="post" action="/patients/delete/{{ patient.patient_id }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}

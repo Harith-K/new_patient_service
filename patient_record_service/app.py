@@ -110,6 +110,7 @@ def get_db():
 # API Endpoints
 @app.post("/patients/add", response_class=HTMLResponse)
 def add_patient(
+    patient_id: Optional[int] = Form(None),
     first_name: str = Form(...),
     last_name: str = Form(...),
     gender: str = Form(...),
@@ -117,29 +118,52 @@ def add_patient(
     contact_number: str = Form(...),
     email: str = Form(...),
     address: str = Form(...),
-    medical_history: str = Form(""),  # Default to empty string
-    prescriptions: str = Form(""),  # Default to empty string
-    lab_results: str = Form(""),  # Default to empty string
+    medical_history: str = Form(""),
+    prescriptions: str = Form(""),
+    lab_results: str = Form(""),
     db: Session = Depends(get_db),
 ):
     try:
-        new_patient = Patient(
-            first_name=first_name,
-            last_name=last_name,
-            gender=gender,
-            date_of_birth=datetime.datetime.strptime(date_of_birth, "%Y-%m-%d").date(),
-            contact_number=contact_number,
-            email=email,
-            address=address,
-            medical_history=medical_history,
-            prescriptions=prescriptions,
-            lab_results=lab_results,
-        )
-        db.add(new_patient)
-        db.commit()
+        if patient_id:
+            # Update existing patient
+            patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
+            if not patient:
+                raise HTTPException(status_code=404, detail="Patient not found")
+            
+            patient.first_name = first_name
+            patient.last_name = last_name
+            patient.gender = gender
+            patient.date_of_birth = datetime.datetime.strptime(date_of_birth, "%Y-%m-%d").date()
+            patient.contact_number = contact_number
+            patient.email = email
+            patient.address = address
+            patient.medical_history = medical_history
+            patient.prescriptions = prescriptions
+            patient.lab_results = lab_results
+            db.commit()
+            logging.info(f"Patient with ID {patient_id} updated successfully.")
+        else:
+            # Add new patient
+            new_patient = Patient(
+                first_name=first_name,
+                last_name=last_name,
+                gender=gender,
+                date_of_birth=datetime.datetime.strptime(date_of_birth, "%Y-%m-%d").date(),
+                contact_number=contact_number,
+                email=email,
+                address=address,
+                medical_history=medical_history,
+                prescriptions=prescriptions,
+                lab_results=lab_results,
+            )
+            db.add(new_patient)
+            db.commit()
+            logging.info(f"New patient added successfully.")
+        
         return RedirectResponse("/patients", status_code=302)
     except Exception as e:
-        logging.error(f"Error inserting patient: {e}")
+        logging.error(f"Error adding/updating patient: {e}")
+        db.rollback()
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
@@ -195,12 +219,19 @@ def edit_patient(
 # Route: Delete a patient
 @app.post("/patients/delete/{patient_id}", response_class=HTMLResponse)
 def delete_patient(patient_id: int, db: Session = Depends(get_db)):
-    patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    db.delete(patient)
-    db.commit()
-    return RedirectResponse("/patients", status_code=302)
+    try:
+        patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
+        if not patient:
+            logging.warning(f"Attempt to delete non-existent patient ID: {patient_id}")
+            raise HTTPException(status_code=404, detail="Patient not found")
+        db.delete(patient)
+        db.commit()
+        logging.info(f"Patient with ID {patient_id} deleted successfully.")
+        return RedirectResponse("/patients", status_code=302)
+    except Exception as e:
+        logging.error(f"Error deleting patient with ID {patient_id}: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # # Route to get a specific patient by ID
 # @app.get("/patients/{patient_id}", response_model=PatientOut)
